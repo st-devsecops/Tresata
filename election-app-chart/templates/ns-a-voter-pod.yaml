@@ -1,0 +1,11 @@
+# templates/ns-a-voter-pod.yaml   (this one will be BLOCKED on purpose)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: voter-a-blocked
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  containers:
+  - name: voter
+    image: busybox
+    command: ["/bin/sh", "-c", "sleep 36000"]

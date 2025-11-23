@@ -1,0 +1,81 @@
+# templates/ns-a-election-app.yaml   ← FINAL 100 % WORKING VERSION (NO YAML ERRORS)
+# Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+# Election API – this one works perfectly
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: election-api
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: election-api
+  template:
+    metadata:
+      labels:
+        app: election-api
+    spec:
+      containers:
+      - name: api
+        image: election-api:latest
+        imagePullPolicy: IfNotPresent   # or Never if using minikube load
+        env:
+        - name: REDIS_HOST
+          value: redis.{{ .Values.namespaces.a }}.svc.cluster.local
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 8
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: election-api
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  selector:
+    app: election-api
+  ports:
+  - port: 80
+    targetPort: 80

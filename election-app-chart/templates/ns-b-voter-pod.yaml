@@ -1,0 +1,11 @@
+# templates/ns-b-voter-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: voter-b
+  namespace: {{ .Values.namespaces.b }}
+spec:
+  containers:
+  - name: voter
+    image: busybox
+    command: ["/bin/sh", "-c", "sleep 36000"]

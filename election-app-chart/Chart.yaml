@@ -1,0 +1,5 @@
+apiVersion: v2
+name: election-voting-demo
+description: Voting app - only ns-b and ns-c can vote, ns-a is blocked
+type: application
+version: 1.0.0

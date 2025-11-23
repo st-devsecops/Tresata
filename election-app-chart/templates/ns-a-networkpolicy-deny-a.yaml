@@ -1,0 +1,59 @@
+# templates/ns-a-networkpolicy-fixed.yaml
+# 1. Protect the election-api – only ns-b and ns-c can reach HTTP port
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-only-from-b-and-c
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  podSelector:
+    matchLabels:
+      app: election-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ .Values.namespaces.b }}
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ .Values.namespaces.c }}
+    ports:
+    - protocol: TCP
+      port: 80
+
+---
+# 2. Protect Redis – only the election-api pods in the same namespace can talk to it
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-redis-only-from-election-api
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: election-api
+    ports:
+    - protocol: TCP
+      port: 6379
+
+---
+# 3. Default deny ALL ingress to the entire namespace (this is the real lockdown)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress-default
+  namespace: {{ .Values.namespaces.a }}
+spec:
+  podSelector: {}        # applies to EVERY pod in ns-a
+  policyTypes:
+  - Ingress
+  # no ingress rules → everything is denied unless explicitly allowed above

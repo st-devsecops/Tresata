@@ -1,0 +1,11 @@
+# templates/ns-c-voter-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: voter-c
+  namespace: {{ .Values.namespaces.c }}
+spec:
+  containers:
+  - name: voter
+    image: busybox
+    command: ["/bin/sh", "-c", "sleep 36000"]
